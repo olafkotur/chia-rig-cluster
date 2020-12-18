@@ -15,6 +15,7 @@ DISCORD_HOOK = os.environ.get('DISCORD_HOOK')
 DIRECTORY = os.environ.get('DIRECTORY')
 TEMP = os.environ.get('TEMP')
 DIST = os.environ.get('DIST')
+ASSIGN_ID = os.environ.get('ASSIGN_ID')
 
 def moment():
   return datetime.now().strftime("**%H:%M:%S**")
@@ -30,7 +31,8 @@ def getDiskInformation():
   return {
     'total': usage.total // (1024 ** 3),
     'used': usage.used // (1024 ** 3),
-    'free': usage.free // (1024 ** 3),
+    # 'free': usage.free // (1024 ** 3),
+    'free': 219
   }
 
 def startPlot():
@@ -47,12 +49,23 @@ def startPlot():
 
   # construct and send resource message
   diskUsage = getDiskInformation()
-  rss = ':pizza: `' + RIG_NAME + '` - Resource update\n```'
+  rss = ':pizza: `' + RIG_NAME + '` - Resource update:\n```'
   rss = rss + 'Disk Size: ' + str(diskUsage['total']) + '\n'
   rss = rss + 'Used Space: ' + str(diskUsage['used']) + '\n'
   rss = rss + 'Free Space: ' + str(diskUsage['free']) + '\n'
-  rss = rss + 'Estimated Plots: ' + str(diskUsage['used'] / 106) + '```'
+  rss = rss + 'Estimated Plots: ' + str(round(diskUsage['used'] / 106)) + ' (' + str(diskUsage['used'] / 106) +')' + '```'
   sendMessage(rss)
 
 # execution
-startPlot()
+shouldPlot = True
+while (shouldPlot):
+  startPlot() # this takes roughly 12 hours to complete
+
+
+  # check if there is enough storage for the next plot
+  diskUsage = getDiskInformation()
+  if diskUsage['free'] <= 110:
+    sendMessage(':exclamation: `' + RIG_NAME + '` - insufficient space to start the next plot, requesting manual hard drive replacement from <@' + ASSIGN_ID + '>')
+    shouldPlot = False
+  elif diskUsage['free'] <= 220:
+    sendMessage(':exclamation: `' + RIG_NAME + '` - there is only enough space for one more plot, requesting assistance from <@' + ASSIGN_ID + '>')
