@@ -4,6 +4,7 @@ import subprocess
 import dotenv
 import platform
 import shutil
+import time
 from datetime import datetime
 
 
@@ -12,10 +13,10 @@ dotenv.load_dotenv()
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 RIG_NAME = os.environ.get('RIG_NAME')
 DISCORD_HOOK = os.environ.get('DISCORD_HOOK')
-DIRECTORY = os.environ.get('DIRECTORY')
-TEMP = os.environ.get('TEMP')
-DIST = os.environ.get('DIST')
 ASSIGN_ID = os.environ.get('ASSIGN_ID')
+DIRECTORY = os.environ.get('DIRECTORY')
+COMMAND = os.environ.get('COMMAND')
+DIST = os.environ.get('DIST')
 
 def moment():
   return datetime.now().strftime("**%H:%M:%S**")
@@ -26,13 +27,12 @@ def sendMessage(msg = ''):
   else:
     print('Skipping send message: ' + msg)
 
-def getDiskInformation():
-  usage = shutil.disk_usage('/')
+def getDiskInformation(drive):
+  usage = shutil.disk_usage(drive)
   return {
     'total': usage.total // (1024 ** 3),
     'used': usage.used // (1024 ** 3),
-    # 'free': usage.free // (1024 ** 3),
-    'free': 219
+    'free': usage.free // (1024 ** 3),
   }
 
 def startPlot():
@@ -41,14 +41,14 @@ def startPlot():
   # initiate plot
   operatingSystem = platform.system()
   if operatingSystem == 'Windows':
-    subprocess.run(['powershell.exe', '-Command', '(cd ./) ; (py mock_plot.py)'])
+    subprocess.run(['powershell.exe', '-Command', '(cd ' + DIRECTORY + ') ; (' + COMMAND + ')'])
   else:
-    os.system('python3 /Users/olafkotur/Documents/chia-rig-cluster/mock_plot.py')
+    os.system(COMMAND)
 
   sendMessage(':100: `' + RIG_NAME + '` - finished plotting at ' + moment())
 
   # construct and send resource message
-  diskUsage = getDiskInformation()
+  diskUsage = getDiskInformation(DIST)
   rss = ':pizza: `' + RIG_NAME + '` - Resource update:\n```'
   rss = rss + 'Disk Size: ' + str(diskUsage['total']) + '\n'
   rss = rss + 'Used Space: ' + str(diskUsage['used']) + '\n'
@@ -60,10 +60,10 @@ def startPlot():
 shouldPlot = True
 while (shouldPlot):
   startPlot() # this takes roughly 12 hours to complete
-
+  time.sleep(60 if ENVIRONMENT == 'production' else 1)
 
   # check if there is enough storage for the next plot
-  diskUsage = getDiskInformation()
+  diskUsage = getDiskInformation(DIST)
   if diskUsage['free'] <= 110:
     sendMessage(':exclamation: `' + RIG_NAME + '` - insufficient space to start the next plot, requesting manual hard drive replacement from <@' + ASSIGN_ID + '>')
     shouldPlot = False
