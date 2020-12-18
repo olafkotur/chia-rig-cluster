@@ -1,9 +1,24 @@
-import requests, os
+import os
+import requests
+import subprocess
+import dotenv
+from datetime import datetime
 
-HOOK = 'https://discord.com/api/webhooks/788024639259017247/OegiUapBmigE6N9htGwt9shilolGcHCC59mUPhsn0r0LeeVx929jl7Ws4nuKuMgXP9ZL'
+dotenv.load_dotenv()
+
+RIG_NAME = os.environ.get('RIG_NAME')
+DISCORD_HOOK = os.environ.get('DISCORD_HOOK')
+
+def moment():
+  return datetime.now().strftime("**%H:%M:%S**")
 
 def sendMessage(msg = ''):
-  requests.post(HOOK, { 'content': msg })
+  requests.post(DISCORD_HOOK, { 'content': msg })
 
+def startPlot():
+  sendMessage(':island: `' + RIG_NAME + '` - initiating new plot at ' + moment())
+  subprocess.run(['powershell.exe', '-Command', '(cd ./) ; (py mock_plot.py)'])
+  sendMessage(':island: `' + RIG_NAME + '` - initiating new plot at ' + moment())
+  print('Done')
 
-os.system('echo Hello World')
+startPlot()
