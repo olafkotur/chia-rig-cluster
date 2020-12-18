@@ -12,7 +12,8 @@ from datetime import datetime
 dotenv.load_dotenv()
 ENVIRONMENT = os.environ.get('ENVIRONMENT')
 RIG_NAME = os.environ.get('RIG_NAME')
-DISCORD_HOOK = os.environ.get('DISCORD_HOOK')
+DEV_DISCORD_HOOK = os.environ.get('DEV_DISCORD_HOOK')
+PROD_DISCORD_HOOK = os.environ.get('PROD_DISCORD_HOOK')
 ASSIGN_ID = os.environ.get('ASSIGN_ID')
 DIRECTORY = os.environ.get('DIRECTORY')
 COMMAND = os.environ.get('COMMAND')
@@ -22,18 +23,15 @@ def moment():
   return datetime.now().strftime("**%H:%M:%S**")
 
 def sendMessage(msg = ''):
-  if ENVIRONMENT == 'production':
-    requests.post(DISCORD_HOOK, { 'content': msg })
-  else:
-    print('Skipping send message: ' + msg)
+  hook = PROD_DISCORD_HOOK if ENVIRONMENT == 'production' else DEV_DISCORD_HOOK
+  requests.post(hook, { 'content': msg })
 
 def getDiskInformation(drive):
   usage = shutil.disk_usage(drive)
   return {
     'total': usage.total // (1024 ** 3),
     'used': usage.used // (1024 ** 3),
-    # 'free': usage.free // (1024 ** 3),
-    'free': 300,
+    'free': usage.free // (1024 ** 3),
   }
 
 def startPlot():
@@ -51,9 +49,9 @@ def startPlot():
   # construct and send resource message
   diskUsage = getDiskInformation(DIST)
   rss = ':pizza: `' + RIG_NAME + '` - Resource update:\n```'
-  rss = rss + 'Disk Size: ' + str(diskUsage['total']) + '\n'
-  rss = rss + 'Used Space: ' + str(diskUsage['used']) + '\n'
-  rss = rss + 'Free Space: ' + str(diskUsage['free']) + '\n'
+  rss = rss + 'Disk Size: ' + str(diskUsage['total']) + ' GiB\n'
+  rss = rss + 'Used Space: ' + str(diskUsage['used']) + ' GiB\n'
+  rss = rss + 'Free Space: ' + str(diskUsage['free']) + ' GiB\n'
   rss = rss + 'Estimated Plots: ' + str(round(diskUsage['used'] / 106)) + ' (' + str(diskUsage['used'] / 106) +')' + '```'
   sendMessage(rss)
 
