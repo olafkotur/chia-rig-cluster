@@ -3,7 +3,7 @@
 import time
 
 s = 0
-while (s < 3):
+while (s < 15):
     print('Computing table ' + str(s + 1))
     s = s + 1
     time.sleep(1)

@@ -32,7 +32,8 @@ def getDiskInformation(drive):
   return {
     'total': usage.total // (1024 ** 3),
     'used': usage.used // (1024 ** 3),
-    'free': usage.free // (1024 ** 3),
+    # 'free': usage.free // (1024 ** 3),
+    'free': 300,
   }
 
 def startPlot():
@@ -41,7 +42,7 @@ def startPlot():
   # initiate plot
   operatingSystem = platform.system()
   if operatingSystem == 'Windows':
-    subprocess.run(['powershell.exe', '-Command', '(cd ' + DIRECTORY + ') ; (' + COMMAND + ')'])
+    subprocess.Popen(['powershell.exe', '-Command', '(cd "' + DIRECTORY + '") ; (' + COMMAND + ')']).wait()
   else:
     os.system(COMMAND)
 
